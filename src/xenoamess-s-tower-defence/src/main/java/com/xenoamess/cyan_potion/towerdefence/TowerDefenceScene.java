@@ -1,16 +1,16 @@
 /**
  * Copyright (C) 2020 XenoAmess
- *
+ * <p>
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * <p>
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * <p>
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
@@ -22,6 +22,7 @@ import com.xenoamess.cyan_potion.base.game_window_components.GameWindowComponent
 import com.xenoamess.cyan_potion.base.io.input.key.Key;
 import com.xenoamess.cyan_potion.base.io.input.mouse.MouseButtonEvent;
 import com.xenoamess.cyan_potion.base.render.Model;
+import com.xenoamess.cyan_potion.base.render.Texture;
 import org.lwjgl.glfw.GLFW;
 import com.xenoamess.cyan_potion.coordinate.AbstractEntityScene;
 import com.xenoamess.cyan_potion.coordinate.entity.AbstractEntity;
@@ -42,6 +43,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TreeMap;
 
+import static com.xenoamess.cyan_potion.base.render.Texture.STRING_PURE_COLOR;
+
 /**
  * Tower Defence game scene.
  *
@@ -56,17 +59,17 @@ public class TowerDefenceScene extends AbstractEntityScene {
     private final GameManager gameManager;
     private final MapGrid mapGrid;
     private final WaveManager waveManager;
-    
+
     private final List<Enemy> enemies = new ArrayList<>();
     private final List<Tower> towers = new ArrayList<>();
     private final List<Projectile> projectiles = new ArrayList<>();
-    
+
     private int playerHealth = 20;
     private int playerMoney = 100;
     private int score = 0;
     private boolean gameOver = false;
     private boolean paused = false;
-    
+
     private Tower.TowerType selectedTowerType = Tower.TowerType.BASIC;
     private int[] hoverGridPos = null;
 
@@ -90,9 +93,11 @@ public class TowerDefenceScene extends AbstractEntityScene {
         this.gameManager = gameWindow.getGameManager();
         this.mapGrid = new MapGrid(12, 8);
         this.waveManager = new WaveManager(this);
-        
+
         // Generate a default path
         this.mapGrid.generateDefaultPath();
+        this.getCamera().setPosX(gameWindow.getWidth() / 2);
+        this.getCamera().setPosY(gameWindow.getHeight() / 2);
     }
 
     @Override
@@ -114,6 +119,7 @@ public class TowerDefenceScene extends AbstractEntityScene {
 
     @Override
     public boolean update() {
+        super.update();
         if (gameOver || paused) {
             return true;
         }
@@ -191,13 +197,13 @@ public class TowerDefenceScene extends AbstractEntityScene {
             selectedTowerType = Tower.TowerType.SPLASH;
             log.info("Selected tower: SPLASH");
         }
-        
+
         // Handle pause
         if (gameManager.getKeymap().isKeyDown(new Key(GLFW.GLFW_KEY_P))) {
             paused = !paused;
             log.info(paused ? "Game paused" : "Game resumed");
         }
-        
+
         // Handle restart
         if (gameManager.getKeymap().isKeyDown(new Key(GLFW.GLFW_KEY_R))) {
             restart();
@@ -209,50 +215,51 @@ public class TowerDefenceScene extends AbstractEntityScene {
         if (mouseButtonEvent == null) {
             return null;
         }
-        
-        if (mouseButtonEvent.getKey() == GLFW.GLFW_MOUSE_BUTTON_LEFT && 
-            mouseButtonEvent.getAction() == GLFW.GLFW_PRESS) {
-            
+
+        if (mouseButtonEvent.getKey() == GLFW.GLFW_MOUSE_BUTTON_LEFT &&
+                mouseButtonEvent.getAction() == GLFW.GLFW_PRESS) {
+
             // Get mouse position in world coordinates
             float mouseX = mouseButtonEvent.getMousePosX();
             float mouseY = mouseButtonEvent.getMousePosY();
-            
+
             // Convert to grid coordinates
             int gridX = mapGrid.worldToGridX(mouseX);
             int gridY = mapGrid.worldToGridY(mouseY);
-            
+
             // Try to build tower
             if (tryBuildTower(gridX, gridY, selectedTowerType)) {
                 log.info("Built tower at ({}, {})", gridX, gridY);
             }
         }
-        
+
         return mouseButtonEvent;
     }
 
     @Override
     public boolean draw() {
+        super.draw();
         // Draw grid
         drawGrid();
-        
+
         // Draw towers
         for (Tower tower : towers) {
             drawTower(tower);
         }
-        
+
         // Draw enemies
         for (Enemy enemy : enemies) {
             drawEnemy(enemy);
         }
-        
+
         // Draw projectiles
         for (Projectile projectile : projectiles) {
             drawProjectile(projectile);
         }
-        
+
         // Draw UI
         drawUI();
-        
+
         return true;
     }
 
@@ -263,15 +270,15 @@ public class TowerDefenceScene extends AbstractEntityScene {
         float cellSize = mapGrid.getCellSize();
         float offsetX = 50f;
         float offsetY = 50f;
-        
+
         for (int x = 0; x < mapGrid.getWidth(); x++) {
             for (int y = 0; y < mapGrid.getHeight(); y++) {
                 float worldX = mapGrid.gridToWorldX(x);
                 float worldY = mapGrid.gridToWorldY(y);
-                
+
                 MapGrid.CellType cellType = mapGrid.getCell(x, y);
                 Vector4f color;
-                
+
                 switch (cellType) {
                     case PATH:
                         color = COLOR_PATH;
@@ -290,12 +297,12 @@ public class TowerDefenceScene extends AbstractEntityScene {
                         color = COLOR_EMPTY;
                         break;
                 }
-                
+
                 // Draw cell background
                 drawRect(worldX - cellSize / 2, worldY - cellSize / 2, cellSize, cellSize, color);
             }
         }
-        
+
         // Draw hover effect
         if (hoverGridPos != null) {
             float hoverX = mapGrid.gridToWorldX(hoverGridPos[0]);
@@ -312,11 +319,11 @@ public class TowerDefenceScene extends AbstractEntityScene {
         float y = tower.getCenterPosY();
         float width = tower.getWidth();
         float height = tower.getHeight();
-        
+
         // Draw tower body
         Vector4f color = getTowerColor(tower.getTowerType());
         drawRect(x - width / 2, y - height / 2, width, height, color);
-        
+
         // Draw range indicator (semi-transparent)
         float range = tower.getRange();
         drawCircleOutline(x, y, range, new Vector4f(1f, 1f, 1f, 0.2f));
@@ -330,17 +337,17 @@ public class TowerDefenceScene extends AbstractEntityScene {
         float y = enemy.getCenterPosY();
         float width = enemy.getWidth();
         float height = enemy.getHeight();
-        
+
         // Draw enemy body
         Vector4f color = getEnemyColor(enemy.getEnemyType());
         drawRect(x - width / 2, y - height / 2, width, height, color);
-        
+
         // Draw health bar
         float healthPercent = enemy.getHealthPercent();
         float barWidth = width;
         float barHeight = 4;
         float barY = y - height / 2 - barHeight - 2;
-        
+
         // Health bar background (red)
         drawRect(x - barWidth / 2, barY, barWidth, barHeight, new Vector4f(1f, 0f, 0f, 1f));
         // Health bar fill (green)
@@ -355,7 +362,7 @@ public class TowerDefenceScene extends AbstractEntityScene {
         float y = projectile.getCenterPosY();
         float width = projectile.getWidth();
         float height = projectile.getHeight();
-        
+
         drawRect(x - width / 2, y - height / 2, width, height, COLOR_PROJECTILE);
     }
 
@@ -367,19 +374,28 @@ public class TowerDefenceScene extends AbstractEntityScene {
         // TODO: Add text rendering for health, money, score, wave
     }
 
+    private Texture createTexture(String color) {
+        return this.getResourceManager().fetchResource(
+                Texture.class,
+                STRING_PURE_COLOR,
+                "",
+                color
+        );
+    }
+
     /**
      * Draw a rectangle.
      */
     private void drawRect(float x, float y, float width, float height, Vector4f color) {
+        Texture texture = createTexture(color.x + "," + color.y + "," + color.z + "," + color.w);
         this.drawBindableAbsolute(
                 this.getCamera(),
                 1f,
-                null,
+                texture,
                 x + width / 2,
                 y + height / 2,
                 width,
-                height,
-                color
+                height
         );
     }
 
@@ -392,18 +408,18 @@ public class TowerDefenceScene extends AbstractEntityScene {
         for (int i = 0; i < segments; i++) {
             float angle1 = (float) (2 * Math.PI * i / segments);
             float angle2 = (float) (2 * Math.PI * (i + 1) / segments);
-            
+
             float x1 = centerX + (float) Math.cos(angle1) * radius;
             float y1 = centerY + (float) Math.sin(angle1) * radius;
             float x2 = centerX + (float) Math.cos(angle2) * radius;
             float y2 = centerY + (float) Math.sin(angle2) * radius;
-            
+
             // Draw line (simplified as thin rectangle)
             float dx = x2 - x1;
             float dy = y2 - y1;
             float len = (float) Math.sqrt(dx * dx + dy * dy);
             float angle = (float) Math.atan2(dy, dx);
-            
+
             // This is a simplified approach - in a real implementation you'd use line drawing
             drawRect(x1, y1, len, 1, color);
         }
@@ -492,7 +508,7 @@ public class TowerDefenceScene extends AbstractEntityScene {
         Tower tower = new Tower(this, worldX, worldY, cellSize * 0.8f, cellSize * 0.8f, towerType);
         addTower(tower);
         mapGrid.setTower(gridX, gridY, tower);
-        
+
         playerMoney -= cost;
         log.info("Tower built at ({}, {}), remaining money: {}", gridX, gridY, playerMoney);
         return true;
@@ -509,7 +525,7 @@ public class TowerDefenceScene extends AbstractEntityScene {
     public List<Enemy> getEnemiesInRange(float centerX, float centerY, float range) {
         List<Enemy> result = new ArrayList<>();
         float rangeSquared = range * range;
-        
+
         for (Enemy enemy : enemies) {
             if (!enemy.isDead()) {
                 float dx = enemy.getCenterPosX() - centerX;
@@ -533,7 +549,7 @@ public class TowerDefenceScene extends AbstractEntityScene {
     public Enemy getClosestEnemy(float centerX, float centerY, float range) {
         Enemy closest = null;
         float closestDistSquared = range * range;
-        
+
         for (Enemy enemy : enemies) {
             if (!enemy.isDead()) {
                 float dx = enemy.getCenterPosX() - centerX;
@@ -557,19 +573,19 @@ public class TowerDefenceScene extends AbstractEntityScene {
         score = 0;
         gameOver = false;
         paused = false;
-        
+
         // Clear all entities
         enemies.clear();
         towers.clear();
         projectiles.clear();
         this.getDynamicEntityList().clear();
         this.getStaticEntitySetList().clear();
-        
+
         // Reset map and wave manager
         mapGrid.reset();
         mapGrid.generateDefaultPath();
         waveManager.reset();
-        
+
         log.info("Game restarted");
     }
 }
