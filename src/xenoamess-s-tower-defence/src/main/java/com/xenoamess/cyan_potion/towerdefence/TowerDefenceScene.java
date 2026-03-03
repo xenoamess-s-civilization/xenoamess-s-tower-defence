@@ -109,7 +109,7 @@ public class TowerDefenceScene extends AbstractEntityScene {
 
     @Override
     protected void initProcessors() {
-        // Initialize event processors
+        super.initProcessors();
     }
 
     @Override
@@ -177,6 +177,8 @@ public class TowerDefenceScene extends AbstractEntityScene {
     }
 
     /**
+     * TODO 改成事件监听机制
+     * <p>
      * Handle user input.
      */
     private void handleInput() {
