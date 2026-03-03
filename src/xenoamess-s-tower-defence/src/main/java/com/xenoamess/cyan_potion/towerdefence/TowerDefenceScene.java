@@ -365,6 +365,15 @@ public class TowerDefenceScene extends AbstractEntityScene {
         drawRect(x - width / 2, y - height / 2, width, height, COLOR_PROJECTILE);
     }
 
+    // Wave bar constants
+    private static final float WAVE_BAR_X = 10;
+    private static final float WAVE_BAR_WIDTH = 20;
+    private static final float WAVE_BAR_SEGMENT_HEIGHT = 25;
+    private static final float WAVE_BAR_SEGMENT_GAP = 2;
+    private static final Vector4f WAVE_BAR_COMPLETED = new Vector4f(0.2f, 0.8f, 0.2f, 1f);
+    private static final Vector4f WAVE_BAR_CURRENT = new Vector4f(1f, 0.8f, 0.2f, 1f);
+    private static final Vector4f WAVE_BAR_PENDING = new Vector4f(0.3f, 0.3f, 0.3f, 1f);
+
     /**
      * Draw the UI.
      */
@@ -394,10 +403,13 @@ public class TowerDefenceScene extends AbstractEntityScene {
         String scoreText = "★ " + score;
         this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 200, lineHeight, scale, textColor, scoreText);
 
-        // Draw wave
+        // Draw wave text
         uiY += lineHeight;
         String waveText = "Wave: " + waveManager.getCurrentWave() + "/" + waveManager.getTotalWaves();
         this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 200, lineHeight, scale, textColor, waveText);
+
+        // Draw vertical wave bar on the left side
+        drawWaveBar();
 
         // Draw selected tower type
         uiY += lineHeight;
@@ -427,6 +439,58 @@ public class TowerDefenceScene extends AbstractEntityScene {
         uiY += lineHeight;
         this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 200, lineHeight, scale, textColor,
                 "P:Pause  R:Restart");
+    }
+
+    /**
+     * Draw the vertical wave progress bar on the left side.
+     */
+    private void drawWaveBar() {
+        int totalWaves = waveManager.getTotalWaves();
+        int currentWave = waveManager.getCurrentWave();
+        boolean waveInProgress = currentWave > 0 && !waveManager.isWaveComplete();
+
+        // Position the wave bar on the left side, vertically centered
+        float barHeight = totalWaves * WAVE_BAR_SEGMENT_HEIGHT + (totalWaves - 1) * WAVE_BAR_SEGMENT_GAP;
+        float barX = WAVE_BAR_X;
+        float barY = (this.getGameWindow().getHeight() - barHeight) / 2;
+
+        // Draw each wave segment from top to bottom (wave 1 at top, wave 10 at bottom)
+        for (int i = 0; i < totalWaves; i++) {
+            int waveNumber = i + 1;
+            float segmentY = barY + i * (WAVE_BAR_SEGMENT_HEIGHT + WAVE_BAR_SEGMENT_GAP);
+
+            Vector4f color;
+            if (waveNumber < currentWave) {
+                // Completed waves - green
+                color = WAVE_BAR_COMPLETED;
+            } else if (waveNumber == currentWave) {
+                // Current wave - yellow/orange
+                color = WAVE_BAR_CURRENT;
+            } else {
+                // Pending waves - dark gray
+                color = WAVE_BAR_PENDING;
+            }
+
+            // Draw the segment
+            drawRect(barX, segmentY, WAVE_BAR_WIDTH, WAVE_BAR_SEGMENT_HEIGHT, color);
+
+            // Draw wave number on the segment
+            Font font = Font.getCurrentFont();
+            if (font != null) {
+                Vector4f textColor = new Vector4f(1f, 1f, 1f, 1f);
+                String waveNumStr = String.valueOf(waveNumber);
+                // Draw text centered in the segment
+                this.getGameWindow().drawTextFillAreaCenter(font,
+                        barX + WAVE_BAR_WIDTH / 2,
+                        segmentY + WAVE_BAR_SEGMENT_HEIGHT / 2,
+                        (int) WAVE_BAR_WIDTH,
+                        (int) WAVE_BAR_SEGMENT_HEIGHT,
+                        0.6f, textColor, waveNumStr);
+            }
+        }
+
+        // Draw border around the entire bar
+        drawRect(barX - 2, barY - 2, WAVE_BAR_WIDTH + 4, barHeight + 4, new Vector4f(0.5f, 0.5f, 0.5f, 1f));
     }
 
     private Texture createTexture(String color) {
