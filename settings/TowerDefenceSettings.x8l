@@ -1,0 +1,47 @@
+<settingFile settingFormatVersion=0.3.0>
+    <commonSettings
+        gameName=XenoAmessTowerDefence
+        gameVersion=0.167.3-SNAPSHOT
+        titleTextID=0
+        defaultFontResourceURI=["com.xenoamess.cyan_potion.base.visual.Font","ttfFile","resources/www/fonts/SourceHanSans-Normal.ttc"]
+        language=chinese
+        gameWindowClassName=com.xenoamess.cyan_potion.base.GameWindow
+        titleClassName=com.xenoamess.cyan_potion.base.game_window_components.AbstractScene
+        maxFPS=60
+    >>
+    <views
+        logicWindowWidth=1280
+        logicWindowHeight=720
+        realWindowWidth=1280
+        realWindowHeight=720
+        scale=1.0
+        fullScreen=0
+        gameWindowResizable=1
+    >>
+    <specialSettings>>
+    <codePlugins [>
+        <rightAfterResourceManagerCreate>SimpleFunctionObject:com.xenoamess.cyan_potion.base.render.Texture:PUT_TEXTURE_LOADERS</rightAfterResourceManagerCreate>
+        <rightAfterResourceManagerCreate>SimpleFunctionObject:com.xenoamess.cyan_potion.base.audio.WaveData:PUT_WAVEDATA_LOADER_MUSIC</rightAfterResourceManagerCreate>
+        <rightAfterResourceManagerCreate>SimpleFunctionObject:com.xenoamess.cyan_potion.base.visual.Font:PUT_FONT_LOADER_TTF_FILE</rightAfterResourceManagerCreate>
+        <rightAfterGameWindowInit>SimpleFunctionObject:com.xenoamess.cyan_potion.towerdefence.plugins.CodePlugins:PLUGIN_TOWER_DEFENCE_SCENE_INIT</rightAfterGameWindowInit>
+    >
+    <debug=1>>
+    <keymap using>
+        <GLFW_KEY_ESCAPE>XENOAMESS_KEY_ESCAPE</GLFW_KEY_ESCAPE>
+        <GLFW_KEY_ENTER>XENOAMESS_KEY_ENTER</GLFW_KEY_ENTER>
+        <GLFW_KEY_SPACE>XENOAMESS_KEY_SPACE</GLFW_KEY_SPACE>
+        <GLFW_KEY_UP>XENOAMESS_KEY_UP</GLFW_KEY_UP>
+        <GLFW_KEY_LEFT>XENOAMESS_KEY_LEFT</GLFW_KEY_LEFT>
+        <GLFW_KEY_DOWN>XENOAMESS_KEY_DOWN</GLFW_KEY_DOWN>
+        <GLFW_KEY_RIGHT>XENOAMESS_KEY_RIGHT</GLFW_KEY_RIGHT>
+        <GLFW_KEY_R>XENOAMESS_KEY_R</GLFW_KEY_R>
+        <GLFW_KEY_P>XENOAMESS_KEY_P</GLFW_KEY_P>
+        <GLFW_KEY_1>XENOAMESS_KEY_1</GLFW_KEY_1>
+        <GLFW_KEY_2>XENOAMESS_KEY_2</GLFW_KEY_2>
+        <GLFW_KEY_3>XENOAMESS_KEY_3</GLFW_KEY_3>
+        <GLFW_KEY_4>XENOAMESS_KEY_4</GLFW_KEY_4>
+        <GLFW_MOUSE_BUTTON_LEFT>XENOAMESS_MOUSE_BUTTON_LEFT</GLFW_MOUSE_BUTTON_LEFT>
+        <GLFW_MOUSE_BUTTON_RIGHT>XENOAMESS_MOUSE_BUTTON_RIGHT</GLFW_MOUSE_BUTTON_RIGHT>
+    >
+    <<comment>
+>
