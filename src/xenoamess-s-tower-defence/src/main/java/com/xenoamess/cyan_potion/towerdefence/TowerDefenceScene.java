@@ -73,6 +73,7 @@ public class TowerDefenceScene extends AbstractEntityScene {
 
     private Tower.TowerType selectedTowerType = Tower.TowerType.BASIC;
     private int[] hoverGridPos = null;
+    private boolean isDragging = false;
 
     private static final Model MODEL = Model.COMMON_MODEL;
     private static final Vector4f COLOR_PATH = new Vector4f(0.6f, 0.4f, 0.2f, 1f);
@@ -156,6 +157,14 @@ public class TowerDefenceScene extends AbstractEntityScene {
     @Override
     public boolean update() {
         super.update();
+
+        // Update hover position when dragging
+        if (isDragging) {
+            float mouseX = getGameWindow().getMousePosX();
+            float mouseY = getGameWindow().getMousePosY();
+            updateHoverGridPos(mouseX, mouseY);
+        }
+
         if (gameOver || paused) {
             return true;
         }
@@ -215,20 +224,24 @@ public class TowerDefenceScene extends AbstractEntityScene {
             return null;
         }
 
-        if (mouseButtonEvent.getKey() == GLFW.GLFW_MOUSE_BUTTON_LEFT &&
-                mouseButtonEvent.getAction() == GLFW.GLFW_PRESS) {
+        if (mouseButtonEvent.getKey() == GLFW.GLFW_MOUSE_BUTTON_LEFT) {
+            if (mouseButtonEvent.getAction() == GLFW.GLFW_PRESS) {
+                // Start dragging
+                isDragging = true;
+                updateHoverGridPos(mouseButtonEvent.getMousePosX(), mouseButtonEvent.getMousePosY());
 
-            // Get mouse position in world coordinates
-            float mouseX = mouseButtonEvent.getMousePosX();
-            float mouseY = mouseButtonEvent.getMousePosY();
-
-            // Convert to grid coordinates
-            int gridX = mapGrid.worldToGridX(mouseX);
-            int gridY = mapGrid.worldToGridY(mouseY);
-
-            // Try to build tower
-            if (tryBuildTower(gridX, gridY, selectedTowerType)) {
-                log.info("Built tower at ({}, {})", gridX, gridY);
+                // Try to build tower at current position
+                int gridX = hoverGridPos[0];
+                int gridY = hoverGridPos[1];
+                if (tryBuildTower(gridX, gridY, selectedTowerType)) {
+                    log.info("Built tower at ({}, {})", gridX, gridY);
+                }
+                return null;
+            } else if (mouseButtonEvent.getAction() == GLFW.GLFW_RELEASE) {
+                // Stop dragging
+                isDragging = false;
+                hoverGridPos = null;
+                return null;
             }
         }
 
@@ -427,6 +440,15 @@ public class TowerDefenceScene extends AbstractEntityScene {
         uiY += lineHeight;
         this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 200, lineHeight, scale, textColor,
                 "P:Pause  R:Restart");
+    }
+
+    /**
+     * Update hover grid position from mouse coordinates.
+     */
+    private void updateHoverGridPos(float mouseX, float mouseY) {
+        int gridX = mapGrid.worldToGridX(mouseX);
+        int gridY = mapGrid.worldToGridY(mouseY);
+        hoverGridPos = new int[]{gridX, gridY};
     }
 
     private Texture createTexture(String color) {
