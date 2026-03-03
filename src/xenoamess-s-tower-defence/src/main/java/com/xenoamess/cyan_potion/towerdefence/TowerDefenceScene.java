@@ -19,7 +19,7 @@ package com.xenoamess.cyan_potion.towerdefence;
 import com.xenoamess.cyan_potion.base.GameManager;
 import com.xenoamess.cyan_potion.base.GameWindow;
 import com.xenoamess.cyan_potion.base.game_window_components.GameWindowComponentTreeNode;
-import com.xenoamess.cyan_potion.base.io.input.key.Key;
+import com.xenoamess.cyan_potion.base.io.input.keyboard.KeyboardEvent;
 import com.xenoamess.cyan_potion.base.io.input.mouse.MouseButtonEvent;
 import com.xenoamess.cyan_potion.base.visual.Font;
 import com.xenoamess.cyan_potion.base.render.Model;
@@ -111,6 +111,41 @@ public class TowerDefenceScene extends AbstractEntityScene {
     @Override
     protected void initProcessors() {
         super.initProcessors();
+
+        // Register keyboard event processor for tower selection and game controls
+        this.registerProcessor(KeyboardEvent.class, (KeyboardEvent event) -> {
+            if (event.getAction() != GLFW.GLFW_PRESS) {
+                return event;
+            }
+
+            switch (event.getKey()) {
+                case GLFW.GLFW_KEY_1:
+                    selectedTowerType = Tower.TowerType.BASIC;
+                    log.info("Selected tower: BASIC");
+                    return null;
+                case GLFW.GLFW_KEY_2:
+                    selectedTowerType = Tower.TowerType.SNIPER;
+                    log.info("Selected tower: SNIPER");
+                    return null;
+                case GLFW.GLFW_KEY_3:
+                    selectedTowerType = Tower.TowerType.RAPID;
+                    log.info("Selected tower: RAPID");
+                    return null;
+                case GLFW.GLFW_KEY_4:
+                    selectedTowerType = Tower.TowerType.SPLASH;
+                    log.info("Selected tower: SPLASH");
+                    return null;
+                case GLFW.GLFW_KEY_P:
+                    paused = !paused;
+                    log.info(paused ? "Game paused" : "Game resumed");
+                    return null;
+                case GLFW.GLFW_KEY_R:
+                    restart();
+                    return null;
+                default:
+                    return event;
+            }
+        });
     }
 
     @Override
@@ -124,9 +159,6 @@ public class TowerDefenceScene extends AbstractEntityScene {
         if (gameOver || paused) {
             return true;
         }
-
-        // Handle input
-        handleInput();
 
         // Update wave manager
         waveManager.update();
@@ -175,42 +207,6 @@ public class TowerDefenceScene extends AbstractEntityScene {
         }
 
         return true;
-    }
-
-    /**
-     * TODO 改成事件监听机制
-     * <p>
-     * Handle user input.
-     */
-    private void handleInput() {
-        // Handle tower selection keys
-        if (gameManager.getKeymap().isKeyDown(new Key(GLFW.GLFW_KEY_1))) {
-            selectedTowerType = Tower.TowerType.BASIC;
-            log.info("Selected tower: BASIC");
-        }
-        if (gameManager.getKeymap().isKeyDown(new Key(GLFW.GLFW_KEY_2))) {
-            selectedTowerType = Tower.TowerType.SNIPER;
-            log.info("Selected tower: SNIPER");
-        }
-        if (gameManager.getKeymap().isKeyDown(new Key(GLFW.GLFW_KEY_3))) {
-            selectedTowerType = Tower.TowerType.RAPID;
-            log.info("Selected tower: RAPID");
-        }
-        if (gameManager.getKeymap().isKeyDown(new Key(GLFW.GLFW_KEY_4))) {
-            selectedTowerType = Tower.TowerType.SPLASH;
-            log.info("Selected tower: SPLASH");
-        }
-
-        // Handle pause
-        if (gameManager.getKeymap().isKeyDown(new Key(GLFW.GLFW_KEY_P))) {
-            paused = !paused;
-            log.info(paused ? "Game paused" : "Game resumed");
-        }
-
-        // Handle restart
-        if (gameManager.getKeymap().isKeyDown(new Key(GLFW.GLFW_KEY_R))) {
-            restart();
-        }
     }
 
     @Override
