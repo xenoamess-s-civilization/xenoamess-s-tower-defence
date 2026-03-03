@@ -21,6 +21,7 @@ import com.xenoamess.cyan_potion.base.GameWindow;
 import com.xenoamess.cyan_potion.base.game_window_components.GameWindowComponentTreeNode;
 import com.xenoamess.cyan_potion.base.io.input.key.Key;
 import com.xenoamess.cyan_potion.base.io.input.mouse.MouseButtonEvent;
+import com.xenoamess.cyan_potion.base.visual.Font;
 import com.xenoamess.cyan_potion.base.render.Model;
 import com.xenoamess.cyan_potion.base.render.Texture;
 import org.lwjgl.glfw.GLFW;
@@ -372,8 +373,64 @@ public class TowerDefenceScene extends AbstractEntityScene {
      * Draw the UI.
      */
     private void drawUI() {
-        // Draw game status
-        // TODO: Add text rendering for health, money, score, wave
+        Font font = Font.getCurrentFont();
+        if (font == null) {
+            return;
+        }
+
+        float uiX = 10;
+        float uiY = 10;
+        float lineHeight = 25;
+        float scale = 0.8f;
+        Vector4f textColor = new Vector4f(1f, 1f, 1f, 1f);
+
+        // Draw health
+        String healthText = "❤ " + playerHealth;
+        this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 200, lineHeight, scale, textColor, healthText);
+
+        // Draw money
+        uiY += lineHeight;
+        String moneyText = "$ " + playerMoney;
+        this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 200, lineHeight, scale, textColor, moneyText);
+
+        // Draw score
+        uiY += lineHeight;
+        String scoreText = "★ " + score;
+        this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 200, lineHeight, scale, textColor, scoreText);
+
+        // Draw wave
+        uiY += lineHeight;
+        String waveText = "Wave: " + waveManager.getCurrentWave() + "/" + waveManager.getTotalWaves();
+        this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 200, lineHeight, scale, textColor, waveText);
+
+        // Draw selected tower type
+        uiY += lineHeight;
+        String towerText = "Tower: " + selectedTowerType.name() + " (" + selectedTowerType.getCost() + "$)";
+        this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 250, lineHeight, scale, textColor, towerText);
+
+        // Draw paused indicator
+        if (paused) {
+            Vector4f pauseColor = new Vector4f(1f, 1f, 0f, 1f);
+            this.getGameWindow().drawTextFillAreaCenter(font, this.getGameWindow().getWidth() / 2f,
+                    this.getGameWindow().getHeight() / 2f, 300, 60, 1.5f, pauseColor, "PAUSED");
+        }
+
+        // Draw game over indicator
+        if (gameOver) {
+            Vector4f gameOverColor = new Vector4f(1f, 0f, 0f, 1f);
+            this.getGameWindow().drawTextFillAreaCenter(font, this.getGameWindow().getWidth() / 2f,
+                    this.getGameWindow().getHeight() / 2f - 50, 300, 60, 1.5f, gameOverColor, "GAME OVER");
+            this.getGameWindow().drawTextFillAreaCenter(font, this.getGameWindow().getWidth() / 2f,
+                    this.getGameWindow().getHeight() / 2f + 20, 400, 40, 0.8f, textColor, "Press R to restart");
+        }
+
+        // Draw tower selection help
+        uiY = this.getGameWindow().getHeight() - 5 * lineHeight;
+        this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 300, lineHeight, scale, textColor,
+                "1:BASIC 2:SNIPER 3:RAPID 4:SPLASH");
+        uiY += lineHeight;
+        this.getGameWindow().drawTextFillAreaLeftTop(font, uiX, uiY, 200, lineHeight, scale, textColor,
+                "P:Pause  R:Restart");
     }
 
     private Texture createTexture(String color) {

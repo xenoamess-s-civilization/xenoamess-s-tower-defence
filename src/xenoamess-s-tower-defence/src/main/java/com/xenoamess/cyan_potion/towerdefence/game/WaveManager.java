@@ -176,6 +176,15 @@ public class WaveManager {
     }
 
     /**
+     * Get the total number of waves.
+     *
+     * @return the total waves count
+     */
+    public int getTotalWaves() {
+        return WAVES_COUNT;
+    }
+
+    /**
      * Check if all waves are complete.
      *
      * @return true if all waves complete
