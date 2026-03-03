@@ -44,9 +44,13 @@ public class CodePlugins {
         log.info("Initializing Tower Defence scene...");
         
         TowerDefenceScene scene = new TowerDefenceScene(gameManager.getGameWindow());
+        // Initialize with full window size
+        float width = gameManager.getGameWindow().getLogicWindowWidth();
+        float height = gameManager.getGameWindow().getLogicWindowHeight();
+        scene.init(0, 0, width, height);
         scene.addToGameWindowComponentTree(gameManager.getGameWindowComponentTree().getRoot());
         
-        log.info("Tower Defence scene initialized successfully");
+        log.info("Tower Defence scene initialized successfully (size: {}x{})", width, height);
         return null;
     };
 }

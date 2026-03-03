@@ -18,6 +18,7 @@ package com.xenoamess.cyan_potion.towerdefence;
 
 import com.xenoamess.cyan_potion.base.GameManager;
 
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -34,6 +35,25 @@ public class TowerDefenceGame {
      * @param args command line arguments
      */
     public static void main(String[] args) {
+        // Ensure running from project root (where settings/ directory exists)
+        String cwd = System.getProperty("user.dir");
+        File settingsFile = new File(cwd, "settings/TowerDefenceSettings.x8l");
+        
+        if (!settingsFile.exists()) {
+            // Try to find project root by looking for settings directory
+            File current = new File(cwd);
+            while (current != null && current.getParentFile() != null) {
+                File parent = current.getParentFile();
+                File testSettings = new File(parent, "settings/TowerDefenceSettings.x8l");
+                if (testSettings.exists()) {
+                    System.setProperty("user.dir", parent.getAbsolutePath());
+                    System.out.println("Changed working directory to: " + parent.getAbsolutePath());
+                    break;
+                }
+                current = parent;
+            }
+        }
+        
         Map<String, String> argsMap = GameManager.generateArgsMap(args);
         argsMap.put("SettingFilePath", "settings/TowerDefenceSettings.x8l");
         GameManager gameManager = new GameManager(argsMap);
