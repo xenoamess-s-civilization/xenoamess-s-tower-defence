@@ -16,6 +16,8 @@
  */
 package com.xenoamess.cyan_potion.civilization.character;
 
+import com.xenoamess.cyan_potion.civilization.character.trait.PersonTrait;
+import com.xenoamess.cyan_potion.civilization.character.trait.TraitType;
 import com.xenoamess.cyan_potion.civilization.util.PersonAttributeUtil;
 import com.xenoamess.cyan_potion.civilization.util.PersonIdGenerator;
 import lombok.Getter;
@@ -24,6 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Person class representing a character in the civilization game.
@@ -123,6 +128,15 @@ public class Person {
      */
     @Getter
     private final LineageType lineageType;
+
+    // ==================== Traits ====================
+
+    /**
+     * Traits representing characteristics, states, behaviors of this person.
+     * Some traits are cleared on death, others persist.
+     */
+    @Getter
+    private final List<PersonTrait> traits = new ArrayList<>();
 
     // ==================== Parent References ====================
 
@@ -447,6 +461,155 @@ public class Person {
      */
     public boolean isAlive() {
         return health > 0;
+    }
+
+    // ==================== Trait Management ====================
+
+    /**
+     * Adds a trait to this person.
+     *
+     * @param trait the trait to add
+     * @return true if added successfully, false if already has this trait type
+     */
+    public boolean addTrait(PersonTrait trait) {
+        // Check if already has this trait type
+        if (hasTrait(trait.getType())) {
+            return false;
+        }
+        traits.add(trait);
+        log.debug("Added trait {} to person {}", trait.getType().getId(), id);
+        return true;
+    }
+
+    /**
+     * Adds a trait by type with default intensity.
+     *
+     * @param type the trait type
+     * @return true if added successfully
+     */
+    public boolean addTrait(TraitType type) {
+        return addTrait(new PersonTrait(type));
+    }
+
+    /**
+     * Removes a specific trait.
+     *
+     * @param trait the trait to remove
+     * @return true if removed successfully
+     */
+    public boolean removeTrait(PersonTrait trait) {
+        return traits.remove(trait);
+    }
+
+    /**
+     * Removes all traits of a specific type.
+     *
+     * @param type the trait type to remove
+     * @return true if any traits were removed
+     */
+    public boolean removeTrait(TraitType type) {
+        return traits.removeIf(t -> t.getType() == type);
+    }
+
+    /**
+     * Checks if the person has a specific trait type.
+     *
+     * @param type the trait type to check
+     * @return true if has the trait
+     */
+    public boolean hasTrait(TraitType type) {
+        return traits.stream().anyMatch(t -> t.getType() == type);
+    }
+
+    /**
+     * Gets a specific trait by type.
+     *
+     * @param type the trait type
+     * @return the trait instance, or null if not found
+     */
+    public PersonTrait getTrait(TraitType type) {
+        return traits.stream()
+            .filter(t -> t.getType() == type)
+            .findFirst()
+            .orElse(null);
+    }
+
+    /**
+     * Gets all traits in a specific category.
+     *
+     * @param category the category
+     * @return list of traits in that category
+     */
+    public List<PersonTrait> getTraitsByCategory(com.xenoamess.cyan_potion.civilization.character.trait.TraitCategory category) {
+        return traits.stream()
+            .filter(t -> t.getCategory() == category)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Clears all traits that should be cleared on death.
+     * Called when the person dies.
+     */
+    public void clearTraitsOnDeath() {
+        List<PersonTrait> removed = traits.stream()
+            .filter(PersonTrait::isClearedOnDeath)
+            .collect(Collectors.toList());
+        traits.removeAll(removed);
+        log.debug("Cleared {} death-clearable traits from person {}", removed.size(), id);
+    }
+
+    /**
+     * Clears expired traits based on current date.
+     *
+     * @param currentDate the current date
+     */
+    public void clearExpiredTraits(LocalDate currentDate) {
+        int before = traits.size();
+        traits.removeIf(t -> t.isExpired(currentDate));
+        int removed = before - traits.size();
+        if (removed > 0) {
+            log.debug("Cleared {} expired traits from person {}", removed, id);
+        }
+    }
+
+    /**
+     * Makes the person pregnant.
+     *
+     * @param conceptionDate the date of conception
+     * @param dueDate the expected due date
+     * @return true if pregnancy was added successfully
+     */
+    public boolean setPregnant(LocalDate conceptionDate, LocalDate dueDate) {
+        if (gender != Gender.FEMALE) {
+            log.warn("Cannot make male person pregnant: {}", id);
+            return false;
+        }
+        if (hasTrait(TraitType.PREGNANT)) {
+            log.warn("Person {} is already pregnant", id);
+            return false;
+        }
+        return addTrait(PersonTrait.pregnant(conceptionDate, dueDate));
+    }
+
+    /**
+     * Makes the person pregnant with default 9-month duration.
+     *
+     * @param conceptionDate the date of conception
+     * @return true if pregnancy was added successfully
+     */
+    public boolean setPregnant(LocalDate conceptionDate) {
+        // Approximately 9 months pregnancy
+        LocalDate dueDate = conceptionDate.plusMonths(9);
+        return setPregnant(conceptionDate, dueDate);
+    }
+
+    /**
+     * Checks if the person is pregnant.
+     *
+     * @return true if pregnant
+     */
+    public boolean isPregnant() {
+        return hasTrait(TraitType.PREGNANT);
     }
 
     // ==================== Builder ====================

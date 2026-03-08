@@ -29,6 +29,8 @@ import com.xenoamess.cyan_potion.civilization.character.ClanMembership;
 import com.xenoamess.cyan_potion.civilization.character.Gender;
 import com.xenoamess.cyan_potion.civilization.character.LineageType;
 import com.xenoamess.cyan_potion.civilization.character.Person;
+import com.xenoamess.cyan_potion.civilization.character.trait.PersonTrait;
+import com.xenoamess.cyan_potion.civilization.character.trait.TraitCategory;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import static com.xenoamess.cyan_potion.base.render.Texture.STRING_PURE_COLOR;
@@ -168,6 +171,14 @@ public class PersonDetailComponent extends AbstractControllableGameWindowCompone
         // Parents info
         drawParentsInfo(x, y, width);
         y += 60;
+
+        // Separator
+        drawSeparator(x, y, width);
+        y += 15;
+
+        // Traits section
+        drawTraitsSection(x, y, width);
+        y += Math.max(60, 30 + person.getTraits().size() * 22);
 
         // Close button at bottom
         closeButton.setLeftTopPos(getLeftTopPosX() + getWidth() - 100, getLeftTopPosY() + getHeight() - 50);
@@ -340,6 +351,76 @@ public class PersonDetailComponent extends AbstractControllableGameWindowCompone
     private String getClanSuffix(Person p) {
         Clan clan = p.getPrimaryClan();
         return clan != null ? "[" + clan.getName() + "]" : "";
+    }
+
+    private void drawTraitsSection(float x, float y, float width) {
+        // Section title
+        this.getGameWindow().drawTextCenter(
+            null,
+            x + width / 2,
+            y,
+            20,
+            0,
+            COLOR_HIGHLIGHT,
+            "【 特质 】"
+        );
+        y += 35;
+
+        List<PersonTrait> traits = person.getTraits();
+        if (traits.isEmpty()) {
+            this.getGameWindow().drawTextCenter(
+                null,
+                x + width / 2,
+                y,
+                16,
+                0,
+                new Vector4f(0.5f, 0.5f, 0.5f, 1.0f),
+                "无特质"
+            );
+            return;
+        }
+
+        float colWidth = width / 2;
+        int col = 0;
+        for (PersonTrait trait : traits) {
+            Vector4f color = getTraitColor(trait.getCategory());
+            String displayText = trait.getDisplayName();
+            if (trait.getNotes() != null && !trait.getNotes().isEmpty()) {
+                displayText += " (" + trait.getNotes() + ")";
+            }
+
+            float itemX = x + col * colWidth;
+            this.getGameWindow().drawTextCenter(
+                null,
+                itemX + colWidth / 2,
+                y,
+                14,
+                0,
+                color,
+                "• " + displayText
+            );
+
+            col++;
+            if (col >= 2) {
+                col = 0;
+                y += 22;
+            }
+        }
+    }
+
+    private Vector4f getTraitColor(TraitCategory category) {
+        switch (category) {
+            case PHYSICAL_STATE:
+                return new Vector4f(1.0f, 0.6f, 0.4f, 1.0f); // Orange-ish for physical states
+            case CHARACTER:
+                return new Vector4f(0.6f, 0.8f, 1.0f, 1.0f); // Blue-ish for character
+            case SOCIAL:
+                return new Vector4f(0.8f, 0.6f, 1.0f, 1.0f); // Purple-ish for social
+            case HISTORICAL:
+                return new Vector4f(0.9f, 0.8f, 0.4f, 1.0f); // Gold-ish for historical
+            default:
+                return COLOR_VALUE;
+        }
     }
 
     private void drawLabelValue(float x, float y, String label, String value) {
