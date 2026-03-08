@@ -146,6 +146,15 @@ public class Person {
     @Getter
     private final Person mother;
 
+    // ==================== Children References ====================
+
+    /**
+     * List of children (bidirectional relationship with parents).
+     * Automatically updated when a child is created with this person as parent.
+     */
+    @Getter
+    private final List<Person> children = new ArrayList<>();
+
     // ==================== Decision Tracking ====================
 
     /**
@@ -205,6 +214,117 @@ public class Person {
 
         // Initialize clan memberships based on inheritance
         this.clanMemberships.addAll(inheritClans());
+
+        // Register this person as child of parents (bidirectional relationship)
+        registerAsChildOfParents();
+    }
+
+    /**
+     * Registers this person as a child of its parents.
+     * Updates the parents' children lists bidirectionally.
+     */
+    private void registerAsChildOfParents() {
+        if (father != null) {
+            father.addChildInternal(this);
+        }
+        if (mother != null) {
+            mother.addChildInternal(this);
+        }
+    }
+
+    /**
+     * Internal method to add a child to this person's children list.
+     * Called by child during construction to maintain bidirectional relationship.
+     *
+     * @param child the child to add
+     */
+    private void addChildInternal(Person child) {
+        if (child != null && !children.contains(child)) {
+            children.add(child);
+            log.debug("Added child {} to person {}", child.getId(), this.id);
+        }
+    }
+
+    /**
+     * Adds a child to this person.
+     * This should only be called when creating a child with this person as parent.
+     * The child's parent reference should be set accordingly before calling this.
+     *
+     * @param child the child to add
+     * @return true if added successfully
+     */
+    public boolean addChild(Person child) {
+        if (child == null) {
+            return false;
+        }
+        // Verify this person is actually a parent of the child
+        if (child.getFather() != this && child.getMother() != this) {
+            log.warn("Cannot add child {} to person {}: not the child's parent", child.getId(), this.id);
+            return false;
+        }
+        if (!children.contains(child)) {
+            children.add(child);
+            log.debug("Added child {} to person {}", child.getId(), this.id);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Removes a child from this person.
+     *
+     * @param child the child to remove
+     * @return true if removed successfully
+     */
+    public boolean removeChild(Person child) {
+        if (child == null) {
+            return false;
+        }
+        boolean removed = children.remove(child);
+        if (removed) {
+            log.debug("Removed child {} from person {}", child.getId(), this.id);
+        }
+        return removed;
+    }
+
+    /**
+     * Gets all sons of this person.
+     *
+     * @return list of male children
+     */
+    public List<Person> getSons() {
+        return children.stream()
+            .filter(c -> c.getGender() == Gender.MALE)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Gets all daughters of this person.
+     *
+     * @return list of female children
+     */
+    public List<Person> getDaughters() {
+        return children.stream()
+            .filter(c -> c.getGender() == Gender.FEMALE)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Checks if this person has any children.
+     *
+     * @return true if has at least one child
+     */
+    public boolean hasChildren() {
+        return !children.isEmpty();
+    }
+
+    /**
+     * Gets the number of children.
+     *
+     * @return children count
+     */
+    public int getChildrenCount() {
+        return children.size();
     }
 
     /**

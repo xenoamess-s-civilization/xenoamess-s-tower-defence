@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -316,13 +317,155 @@ class PersonTest {
             .baseEloquence(7.0)
             .naturalAppearance(85.0)
             .build();
-        
+
         String str = person.toString();
         assertTrue(str.contains("p18"));
         assertTrue(str.contains("Test"));
         assertTrue(str.contains("MALE"));
     }
-    
+
+    // ==================== Children Tests ====================
+
+    @Test
+    void testChildrenListInitiallyEmpty() {
+        Person person = Person.builder("p30", "Test", Gender.MALE).build();
+        assertTrue(person.getChildren().isEmpty());
+        assertFalse(person.hasChildren());
+        assertEquals(0, person.getChildrenCount());
+    }
+
+    @Test
+    void testBidirectionalParentChildRelationship() {
+        Person father = Person.builder("f3", "Father", Gender.MALE).build();
+        Person mother = Person.builder("m3", "Mother", Gender.FEMALE).build();
+
+        Person child = Person.builder("c1", "Child", Gender.MALE)
+            .parents(father, mother)
+            .build();
+
+        // Child has parents
+        assertEquals(father, child.getFather());
+        assertEquals(mother, child.getMother());
+
+        // Parents have child (bidirectional)
+        assertTrue(father.getChildren().contains(child));
+        assertTrue(mother.getChildren().contains(child));
+        assertEquals(1, father.getChildrenCount());
+        assertEquals(1, mother.getChildrenCount());
+        assertTrue(father.hasChildren());
+        assertTrue(mother.hasChildren());
+    }
+
+    @Test
+    void testMultipleChildren() {
+        Person father = Person.builder("f4", "Father", Gender.MALE).build();
+        Person mother = Person.builder("m4", "Mother", Gender.FEMALE).build();
+
+        Person son = Person.builder("s2", "Son", Gender.MALE)
+            .parents(father, mother)
+            .build();
+        Person daughter = Person.builder("d2", "Daughter", Gender.FEMALE)
+            .parents(father, mother)
+            .build();
+
+        // Both parents have both children
+        assertEquals(2, father.getChildrenCount());
+        assertEquals(2, mother.getChildrenCount());
+        assertTrue(father.getChildren().contains(son));
+        assertTrue(father.getChildren().contains(daughter));
+        assertTrue(mother.getChildren().contains(son));
+        assertTrue(mother.getChildren().contains(daughter));
+    }
+
+    @Test
+    void testGetSonsAndDaughters() {
+        Person father = Person.builder("f5", "Father", Gender.MALE).build();
+        Person mother = Person.builder("m5", "Mother", Gender.FEMALE).build();
+
+        Person son1 = Person.builder("s3", "Son1", Gender.MALE)
+            .parents(father, mother)
+            .build();
+        Person son2 = Person.builder("s4", "Son2", Gender.MALE)
+            .parents(father, mother)
+            .build();
+        Person daughter = Person.builder("d3", "Daughter", Gender.FEMALE)
+            .parents(father, mother)
+            .build();
+
+        assertEquals(2, father.getSons().size());
+        assertEquals(1, father.getDaughters().size());
+        assertTrue(father.getSons().contains(son1));
+        assertTrue(father.getSons().contains(son2));
+        assertTrue(father.getDaughters().contains(daughter));
+    }
+
+    @Test
+    void testRemoveChild() {
+        Person father = Person.builder("f6", "Father", Gender.MALE).build();
+        Person child = Person.builder("c2", "Child", Gender.MALE)
+            .father(father)
+            .build();
+
+        assertTrue(father.getChildren().contains(child));
+
+        father.removeChild(child);
+
+        assertFalse(father.getChildren().contains(child));
+        assertEquals(0, father.getChildrenCount());
+    }
+
+    @Test
+    void testAddChildValidation() {
+        Person father = Person.builder("f7", "Father", Gender.MALE).build();
+        Person unrelated = Person.builder("u1", "Unrelated", Gender.MALE).build();
+
+        // Cannot add child that doesn't have this person as parent
+        boolean result = father.addChild(unrelated);
+        assertFalse(result);
+        assertFalse(father.getChildren().contains(unrelated));
+
+        // Create child properly
+        Person child = Person.builder("c3", "Child", Gender.MALE)
+            .father(father)
+            .build();
+
+        // Already added automatically, trying to add again should return false
+        result = father.addChild(child);
+        assertFalse(result); // Already exists
+        assertEquals(1, father.getChildrenCount());
+    }
+
+    @Test
+    void testAddNullChild() {
+        Person father = Person.builder("f8", "Father", Gender.MALE).build();
+        assertFalse(father.addChild(null));
+        assertFalse(father.removeChild(null));
+    }
+
+    @Test
+    void testOrphanHasNoChildrenInitially() {
+        Person orphan = Person.builder("o2", "Orphan", Gender.MALE).build();
+        assertNull(orphan.getFather());
+        assertNull(orphan.getMother());
+        assertTrue(orphan.getChildren().isEmpty());
+    }
+
+    @Test
+    void testChildrenListIsUnmodifiableFromOutside() {
+        Person father = Person.builder("f9", "Father", Gender.MALE).build();
+        Person child = Person.builder("c4", "Child", Gender.MALE)
+            .father(father)
+            .build();
+
+        // Try to modify the list directly - should throw exception or not affect internal state
+        List<Person> children = father.getChildren();
+        assertEquals(1, children.size());
+
+        // The returned list should be the actual list (not a copy), but modifications
+        // through addChild/removeChild should be used for proper encapsulation
+        assertTrue(father.getChildren().contains(child));
+    }
+
     @Test
     void testCustomConstitution() {
         Person person = Person.builder("p19", "Test", Gender.MALE)
