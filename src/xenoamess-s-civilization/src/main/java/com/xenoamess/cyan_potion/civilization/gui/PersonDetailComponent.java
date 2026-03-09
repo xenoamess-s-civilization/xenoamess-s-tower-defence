@@ -176,6 +176,14 @@ public class PersonDetailComponent extends AbstractControllableGameWindowCompone
         drawSeparator(x, y, width);
         y += 15;
 
+        // Children info
+        drawChildrenInfo(x, y, width);
+        y += Math.max(60, 30 + person.getChildren().size() * 22);
+
+        // Separator
+        drawSeparator(x, y, width);
+        y += 15;
+
         // Traits section
         drawTraitsSection(x, y, width);
         y += Math.max(60, 30 + person.getTraits().size() * 22);
@@ -346,6 +354,82 @@ public class PersonDetailComponent extends AbstractControllableGameWindowCompone
 
         drawLabelValue(x, y, "父亲:", fatherInfo);
         drawLabelValue(x + width / 2, y, "母亲:", motherInfo);
+    }
+
+    private void drawChildrenInfo(float x, float y, float width) {
+        // Section title
+        this.getGameWindow().drawTextCenter(
+            null,
+            x + width / 2,
+            y,
+            20,
+            0,
+            COLOR_HIGHLIGHT,
+            "【 子嗣 】"
+        );
+        y += 35;
+
+        if (!person.hasChildren()) {
+            this.getGameWindow().drawTextCenter(
+                null,
+                x + width / 2,
+                y,
+                16,
+                0,
+                new Vector4f(0.5f, 0.5f, 0.5f, 1.0f),
+                "无子嗣"
+            );
+            return;
+        }
+
+        // Show children count
+        this.getGameWindow().drawTextCenter(
+            null,
+            x + width / 2,
+            y,
+            14,
+            0,
+            new Vector4f(0.7f, 0.7f, 0.7f, 1.0f),
+            "共 " + person.getChildrenCount() + " 人 (" + person.getSons().size() + " 子, " + person.getDaughters().size() + " 女)"
+        );
+        y += 25;
+
+        // List children (up to 5 visible at once)
+        int displayed = 0;
+        int maxDisplay = 5;
+        for (Person child : person.getChildren()) {
+            if (displayed >= maxDisplay) {
+                this.getGameWindow().drawTextCenter(
+                    null,
+                    x + width / 2,
+                    y,
+                    12,
+                    0,
+                    new Vector4f(0.5f, 0.5f, 0.5f, 1.0f),
+                    "... 还有 " + (person.getChildrenCount() - maxDisplay) + " 人"
+                );
+                break;
+            }
+
+            Vector4f genderColor = child.getGender() == Gender.MALE ? COLOR_MALE : COLOR_FEMALE;
+            String genderSymbol = child.getGender() == Gender.MALE ? "♂" : "♀";
+            String childInfo = genderSymbol + " " + child.getName() + getClanSuffix(child);
+
+            float colX = (displayed % 2 == 0) ? x : x + width / 2;
+            float rowY = y + (displayed / 2) * 22;
+
+            this.getGameWindow().drawTextCenter(
+                null,
+                colX + width / 4,
+                rowY,
+                14,
+                0,
+                genderColor,
+                childInfo
+            );
+
+            displayed++;
+        }
     }
 
     private String getClanSuffix(Person p) {
